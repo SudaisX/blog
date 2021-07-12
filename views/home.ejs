@@ -1,0 +1,13 @@
+<%- include('partials/header'); %>
+
+<h1>Welcome to my Blog</h1>
+<hr>
+<% for(post of posts){ %>
+<div class="post-container">
+    <h1><%= post.title %> </h1>
+    <p><%= post.content.slice(0, 500) %>...</p>
+    <a href="<%= `posts/${_.lowerCase(post.title)}` %> " class="btn btn-primary">View Post</a>
+</div>
+<% } %>
+
+<%- include('partials/footer'); %>
