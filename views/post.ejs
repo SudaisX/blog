@@ -1,6 +1,15 @@
 <%- include('partials/header'); %>
 
-<h1><%= title %> </h1>
-<p><%= content %></p>
+<h1><%= post.title %> </h1>
+<p class="content"><%= post.content %></p>
+
+<div class="btns-container">
+    <form action="<%= `/posts/${post.id}/edit` %>" method="POST">
+        <button class="btn btn-primary ">Edit Post</button>
+    </form>
+    <form action="<%= `/posts/${post.id}/delete` %>" method="POST">
+        <button class="btn btn-danger ">Delete Post</button>
+    </form>
+</div>
 
 <%- include('partials/footer'); %>

@@ -1,17 +1,18 @@
 const express = require('express');
 const ejs = require('ejs');
 const path = require('path');
-const _ = require('lodash');
+const mongoose = require('mongoose');
 
-const homeStartingContent = 'Welcome to my Blog.';
-const aboutContent =
-    'Hac habitasse platea dictumst vestibulum rhoncus est pellentesque. Dictumst vestibulum rhoncus est pellentesque elit ullamcorper. Non diam phasellus vestibulum lorem sed. Platea dictumst quisque sagittis purus sit. Egestas sed sed risus pretium quam vulputate dignissim suspendisse. Mauris in aliquam sem fringilla. Semper risus in hendrerit gravida rutrum quisque non tellus orci. Amet massa vitae tortor condimentum lacinia quis vel eros. Enim ut tellus elementum sagittis vitae. Mauris ultrices eros in cursus turpis massa tincidunt dui.';
-const contactContent =
-    'Scelerisque eleifend donec pretium vulputate sapien. Rhoncus urna neque viverra justo nec ultrices. Arcu dui vivamus arcu felis bibendum. Consectetur adipiscing elit duis tristique. Risus viverra adipiscing at in tellus integer feugiat. Sapien nec sagittis aliquam malesuada bibendum arcu vitae. Consequat interdum varius sit amet mattis. Iaculis nunc sed augue lacus. Interdum posuere lorem ipsum dolor sit amet consectetur adipiscing elit. Pulvinar elementum integer enim neque. Ultrices gravida dictum fusce ut placerat orci nulla. Mauris in aliquam sem fringilla ut morbi tincidunt. Tortor posuere ac ut consequat semper viverra nam libero.';
-
-const posts = [];
+// const posts = [];
+const Post = require('./models/post.js');
 
 const app = express();
+
+// MongoDB Connection
+mongoose
+    .connect('mongodb://localhost:27017/blog', { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log('MongoDB Connection Open!'))
+    .catch((err) => console.log('MongoDB Connection Failed..', err));
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '/views'));
@@ -21,48 +22,54 @@ app.use(express.urlencoded({ extended: true })); // for parsing application/x-ww
 
 app.use(express.static('public')); // public folder
 
-app.get('/', (req, res) => {
-    // console.log(posts);
-
-    res.render('home', { posts, _ });
+app.get('/', async (req, res) => {
+    const posts = await Post.find({});
+    res.render('home', { posts });
 });
 
 app.get('/about', (req, res) => {
-    res.render('about', { aboutContent });
+    res.render('about');
 });
 
 app.get('/contact', (req, res) => {
-    res.render('contact', { contactContent });
+    res.render('contact');
 });
 
 app.get('/compose', (req, res) => {
     res.render('compose');
 });
 
-app.post('/compose', (req, res) => {
+app.post('/compose', async (req, res) => {
     const post = {
         title: req.body.title,
         content: req.body.post,
     };
 
-    posts.push(post);
+    const newPost = new Post(post);
+    await newPost.save();
+
     res.redirect('/');
 });
 
-app.get('/posts/:title', (req, res) => {
-    // const { title } = req.params;
-    let found = false;
-    const title = _.lowerCase(req.params.title);
-    for (let post of posts) {
-        postTitle = _.lowerCase(post.title);
-        if (postTitle === title) {
-            const { title, content } = post;
-            res.render('post', { title, content });
-            found = true;
-            break;
-        }
-    }
-    if (!found) {
+app.post('/posts/:id/delete', async (req, res) => {
+    const { id } = req.params;
+    await Post.findOneAndDelete({ _id: id });
+    res.redirect('/');
+});
+
+app.post('/posts/:id/edit', async (req, res) => {
+    const { id } = req.params;
+    const post = await Post.find({ _id: id });
+    res.redirect('/');
+});
+
+app.get('/posts/:id', async (req, res) => {
+    const { id } = req.params;
+    const post = await Post.find({ _id: id });
+    console.log(post[0]);
+    if (post) {
+        res.render('post', { post: post[0] });
+    } else {
         res.render('error');
     }
 });
